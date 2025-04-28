@@ -1,0 +1,35 @@
+.
+├── App.js
+├── app.json
+├── assets
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   └── splash-icon.png
+├── index.js
+├── package.json
+├── package-lock.json
+├── plan.md
+├── README.md
+├── src
+│   ├── components
+│   │   └── index.js
+│   ├── constants
+│   │   └── index.js
+│   ├── contexts
+│   │   └── index.js
+│   ├── hooks
+│   │   └── index.js
+│   ├── navigation
+│   │   └── TabNavigator.js
+│   ├── navigators
+│   │   └── index.js
+│   ├── screens
+│   │   └── index.js
+│   ├── services
+│   │   └── index.js
+│   └── utils
+│       └── index.js
+└── tree.txt
+
+12 directories, 21 files
