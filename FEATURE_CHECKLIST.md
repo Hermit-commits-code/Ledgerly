@@ -16,8 +16,8 @@ This checklist tracks the development milestones and features for the Ledgerly f
 
 ## Milestone 2: UX & Security
 - [x] Biometric/passcode lock
-- [ ] Dark/light mode
-- [ ] Attachments (receipts, notes)
+- [x] Dark/light mode
+- [x] Attachments (receipts, notes)
 - [ ] Budget progress alerts
 - [ ] Transaction search/filter
 

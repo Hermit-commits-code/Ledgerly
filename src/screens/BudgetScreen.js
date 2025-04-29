@@ -72,11 +72,17 @@ export default function BudgetScreen({ onLogout }) {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.catName}>{cat}</Text>
                   {budget ? (
-                    <Text style={percent >= 100 ? styles.overBudget : styles.budgetText}>
+                    <Text style={percent >= 100 ? styles.overBudget : percent >= 90 ? styles.nearBudget : styles.budgetText}>
                       ${spent.toFixed(2)} spent / ${budget} budget ({percent}%)
                     </Text>
                   ) : (
                     <Text style={styles.noBudget}>No budget set</Text>
+                  )}
+                  {budget && percent >= 100 && (
+                    <Text style={styles.alertText}>⚠️ Over budget!</Text>
+                  )}
+                  {budget && percent >= 90 && percent < 100 && (
+                    <Text style={styles.alertText}>⚠️ Near budget limit</Text>
                   )}
                 </View>
                 <TextInput
@@ -168,9 +174,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
+  nearBudget: {
+    color: '#fbbf24', // yellow
+    fontWeight: 'bold',
+  },
   noBudget: {
     color: '#64748b',
     fontSize: 15,
+  },
+  alertText: {
+    color: '#ef4444',
+    fontWeight: 'bold',
+    marginTop: 2,
   },
   input: {
     width: 110,

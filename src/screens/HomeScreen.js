@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Platform, StatusBar, Image, TextInput } from 'react-native';
 import { getTransactions, deleteTransaction } from '../utils/storage';
 
 export default function HomeScreen({ navigation, onLogout }) {
   const [transactions, setTransactions] = useState([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -30,6 +31,15 @@ export default function HomeScreen({ navigation, onLogout }) {
 
   const totalBalance = transactions.reduce((sum, t) => sum + t.amount, 0);
 
+  const filteredTransactions = transactions.filter(t => {
+    const q = search.toLowerCase();
+    return (
+      t.description.toLowerCase().includes(q) ||
+      t.category.toLowerCase().includes(q) ||
+      (t.attachment && t.attachment.type === 'note' && t.attachment.note.toLowerCase().includes(q))
+    );
+  });
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -37,8 +47,15 @@ export default function HomeScreen({ navigation, onLogout }) {
         <Text style={styles.balanceAmount}>${totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
 
         <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search by description, category, or note..."
+          value={search}
+          onChangeText={setSearch}
+          clearButtonMode="while-editing"
+        />
         <FlatList
-          data={transactions}
+          data={filteredTransactions}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <View style={styles.transactionRow}>
@@ -49,6 +66,12 @@ export default function HomeScreen({ navigation, onLogout }) {
                   : `+$${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
               </Text>
               <Text style={styles.transactionDate} numberOfLines={1} ellipsizeMode="tail">{item.date}</Text>
+              {item.attachment && item.attachment.type === 'image' && (
+                <Image source={{ uri: item.attachment.uri }} style={styles.attachmentThumb} />
+              )}
+              {item.attachment && item.attachment.type === 'note' && (
+                <Text style={styles.attachmentNoteIcon}>📝</Text>
+              )}
               <TouchableOpacity
                 style={styles.deleteBtn}
                 onPress={() => handleDelete(item.id)}
@@ -144,6 +167,18 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     marginLeft: 8,
   },
+  attachmentThumb: {
+    width: 28,
+    height: 28,
+    borderRadius: 4,
+    marginLeft: 6,
+    marginRight: 2,
+  },
+  attachmentNoteIcon: {
+    fontSize: 22,
+    marginLeft: 6,
+    marginRight: 2,
+  },
   deleteBtn: {
     marginLeft: 8,
     backgroundColor: '#ef4444',
@@ -227,5 +262,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  searchBar: {
+    width: '100%',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    color: '#334155',
   },
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Platform, StatusBar, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { storeTransaction } from '../utils/storage';
 
 const CATEGORIES = [
@@ -17,6 +18,19 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [attachment, setAttachment] = useState(null); // { uri, type: 'image' } or { note, type: 'note' }
+  const [note, setNote] = useState('');
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setAttachment({ uri: result.assets[0].uri, type: 'image' });
+    }
+  };
 
   const handleSubmit = async () => {
     if (!description || !amount || isNaN(Number(amount))) {
@@ -29,12 +43,15 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
       amount: Number(amount),
       category,
       date: new Date().toLocaleDateString(),
+      attachment: attachment ? attachment : note ? { note, type: 'note' } : null,
     };
     await storeTransaction(transaction);
     Alert.alert('Success', 'Transaction added!');
     setDescription('');
     setAmount('');
     setCategory(CATEGORIES[0]);
+    setNote('');
+    setAttachment(null);
     if (navigation?.goBack) navigation.goBack();
   };
 
@@ -67,6 +84,20 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity style={styles.attachBtn} onPress={pickImage}>
+          <Text style={styles.attachBtnText}>{attachment && attachment.type === 'image' ? 'Change Photo' : 'Add Receipt Photo'}</Text>
+        </TouchableOpacity>
+        {attachment && attachment.type === 'image' && (
+          <Image source={{ uri: attachment.uri }} style={styles.attachmentPreview} />
+        )}
+        <Text style={styles.label}>Or Add Note</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Add a note (optional)"
+          value={note}
+          onChangeText={setNote}
+          multiline
+        />
         <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
           <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
@@ -179,5 +210,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  attachBtn: {
+    marginTop: 16,
+    backgroundColor: '#38bdf8',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    width: '100%',
+  },
+  attachBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  attachmentPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    marginVertical: 10,
+    alignSelf: 'center',
   },
 });

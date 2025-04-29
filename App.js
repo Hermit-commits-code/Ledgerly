@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useColorScheme } from 'react-native';
+import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import OnboardingScreen from './src/components/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import TransactionFormScreen from './src/screens/TransactionFormScreen';
@@ -16,6 +18,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(false);
+  const colorScheme = useColorScheme();
 
   if (!unlocked) {
     return <LockScreen onUnlock={() => setUnlocked(true)} />;
@@ -26,7 +29,7 @@ export default function App() {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack.Navigator initialRouteName="Onboarding" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
