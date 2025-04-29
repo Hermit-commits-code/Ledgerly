@@ -5,17 +5,17 @@ This checklist tracks the development milestones and features for the Ledgerly f
 ---
 
 ## Milestone 1: MVP Core
-- [ ] Onboarding & authentication (basic, optional)
-- [ ] Home/dashboard (balance, recent transactions)
-- [ ] Add/edit/delete transactions
-- [ ] Categorize transactions
-- [ ] Create/view budgets
-- [ ] Simple spending report (pie chart)
-- [ ] Local data storage (AsyncStorage or SQLite)
-- [ ] Basic navigation
+- [x] Onboarding & authentication (basic, optional)
+- [x] Home/dashboard (balance, recent transactions)
+- [x] Add/edit/delete transactions
+- [x] Categorize transactions
+- [x] Create/view budgets
+- [x] Simple spending report (pie chart)
+- [x] Local data storage (AsyncStorage or SQLite)
+- [x] Basic navigation
 
 ## Milestone 2: UX & Security
-- [ ] Biometric/passcode lock
+- [x] Biometric/passcode lock
 - [ ] Dark/light mode
 - [ ] Attachments (receipts, notes)
 - [ ] Budget progress alerts
