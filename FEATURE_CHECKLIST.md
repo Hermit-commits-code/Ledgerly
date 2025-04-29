@@ -35,14 +35,14 @@ This checklist tracks the development milestones and features for the Ledgerly f
 
 ## Milestone 5: UI Testing & QA
 - [x] Manual UI walkthrough (all screens)
-- [ ] Automated UI tests (Jest/RTL, Detox)
-- [ ] Accessibility checks
+- [x] Automated UI tests (Jest/RTL, Detox)
+- [x] Accessibility checks
 - [ ] Visual regression testing (optional)
 - [ ] User feedback round
 
 ## Milestone 6: Polish & Deploy
 - [ ] Full QA/testing
-- [ ] Accessibility improvements
+- [x] Accessibility improvements
 - [ ] App Store/Play Store deployment
 - [ ] Marketing site
 

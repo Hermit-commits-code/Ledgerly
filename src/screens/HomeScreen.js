@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AdvancedReportsScreen from './AdvancedReportsScreen';
 import SettingsScreen from './SettingsScreen';
 import BudgetScreen from './BudgetScreen';
+import DataExportImportScreen from './DataExportImportScreen';
+import ProfileScreen from './ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -69,52 +71,41 @@ function HomeScreenContent({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.balanceLabel}>Total Balance</Text>
-        <Text style={styles.balanceAmount}>{getCurrencySymbol(currency)}{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
-
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search by description, category, or note..."
-          value={search}
-          onChangeText={setSearch}
-          clearButtonMode="while-editing"
-        />
-        <FlatList
-          data={filteredTransactions}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.transactionRow}>
-              <Text style={styles.transactionDesc}>{item.description}</Text>
-              {item.isRecurring && (
-                <Text style={styles.recurringIcon}>🔁</Text>
-              )}
-              {renderTransactionAmount(item)}
-              <Text style={styles.transactionDate} numberOfLines={1} ellipsizeMode="tail">{item.date}</Text>
-              {item.attachment && item.attachment.type === 'image' && (
-                <Image source={{ uri: item.attachment.uri }} style={styles.attachmentThumb} />
-              )}
-              {item.attachment && item.attachment.type === 'note' && (
-                <Text style={styles.attachmentNoteIcon}>📝</Text>
-              )}
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => handleDelete(item.id)}
-                accessibilityLabel={`Delete ${item.description}`}
-              >
-                <Text style={styles.deleteBtnText}>Delete</Text>
-              </TouchableOpacity>
+      <FlatList
+        ListHeaderComponent={
+          <>
+            <Text style={styles.balanceLabel} accessibilityRole="header" accessibilityLabel="Total Balance">Total Balance</Text>
+            <Text style={styles.balanceAmount} accessibilityLabel={`Total balance is ${getCurrencySymbol(currency)}${totalBalance.toFixed(2)}`}>{getCurrencySymbol(currency)}{totalBalance.toFixed(2)}</Text>
+            <Text style={styles.sectionTitle} accessibilityRole="header" accessibilityLabel="Recent Transactions">Recent Transactions</Text>
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Search by description, category, or note..."
+              value={search}
+              onChangeText={setSearch}
+              accessibilityLabel="Search transactions"
+              accessibilityHint="Search by description, category, or note"
+            />
+          </>
+        }
+        data={filteredTransactions}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.transactionRow} accessible accessibilityLabel={`Transaction at ${item.description}, amount ${item.amount > 0 ? 'plus' : 'minus'} ${getCurrencySymbol(currency)}${Math.abs(item.amount).toFixed(2)}, category ${item.category}, date ${item.date}`}> 
+            <View>
+              <Text style={styles.transactionDesc} accessibilityLabel={`Description: ${item.description}`}>{item.description}</Text>
+              <Text style={styles.transactionAmount} accessibilityLabel={`Amount: ${item.amount > 0 ? '+' : '-'}${getCurrencySymbol(currency)}${Math.abs(item.amount).toFixed(2)}`}>{item.amount > 0 ? '+' : '-'}{getCurrencySymbol(currency)}{Math.abs(item.amount).toFixed(2)}</Text>
+              <Text style={styles.transactionDate} accessibilityLabel={`Date: ${item.date}`}>{item.date}</Text>
             </View>
-          )}
-          style={styles.transactionsList}
-          ListEmptyComponent={<Text style={{color:'#64748b',textAlign:'center',marginTop:16}}>No transactions yet.</Text>}
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddTransaction')}>
-          <Text style={styles.addButtonText}>+ Add Transaction</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item.id)} accessibilityRole="button" accessibilityLabel={`Delete transaction at ${item.description}`}> 
+              <Text style={styles.deleteBtnText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        accessibilityLabel="Transactions List"
+      />
+      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddTransaction')} accessibilityRole="button" accessibilityLabel="Add Transaction">
+        <Text style={styles.addButtonText}>+ Add Transaction</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -127,13 +118,36 @@ function MainTabs() {
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e5e7eb', height: 60 },
-        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold' },
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
+        tabBarItemStyle: { flex: 1, minWidth: 90, maxWidth: 140, marginHorizontal: 2, alignItems: 'center', justifyContent: 'center' },
       }}
     >
-      <Tab.Screen name="HomeTab" component={HomeScreenContent} options={{ tabBarLabel: 'Home', tabBarIcon: () => <Text>🏠</Text> }} />
-      <Tab.Screen name="ReportsTab" component={AdvancedReportsScreen} options={{ tabBarLabel: 'Reports', tabBarIcon: () => <Text>📊</Text> }} />
-      <Tab.Screen name="BudgetsTab" component={BudgetScreen} options={{ tabBarLabel: 'Budgets', tabBarIcon: () => <Text>💰</Text> }} />
-      <Tab.Screen name="SettingsTab" component={SettingsScreen} options={{ tabBarLabel: 'Settings', tabBarIcon: () => <Text>⚙️</Text> }} />
+      <Tab.Screen name="HomeTab" component={HomeScreenContent} options={{
+        tabBarLabel: 'Home',
+        tabBarIcon: () => <Text accessibilityLabel="Home Tab Icon">🏠</Text>,
+        accessibilityLabel: 'Home Tab',
+        accessibilityRole: 'tab',
+      }} />
+      <Tab.Screen name="ReportsTab" component={AdvancedReportsScreen} options={{
+        tabBarLabel: 'Reports',
+        tabBarIcon: () => <Text accessibilityLabel="Reports Tab Icon">📊</Text>,
+        accessibilityLabel: 'Reports Tab',
+        accessibilityRole: 'tab',
+      }} />
+      <Tab.Screen name="BudgetsTab" component={BudgetScreen} options={{
+        tabBarLabel: 'Budgets',
+        tabBarIcon: () => <Text accessibilityLabel="Budgets Tab Icon">💰</Text>,
+        accessibilityLabel: 'Budgets Tab',
+        accessibilityRole: 'tab',
+      }} />
+      <Tab.Screen name="SettingsTab" component={SettingsScreen} options={{
+        tabBarLabel: 'Settings',
+        tabBarIcon: () => <Text accessibilityLabel="Settings Tab Icon">⚙️</Text>,
+        accessibilityLabel: 'Settings Tab',
+        accessibilityRole: 'tab',
+      }} />
+      <Tab.Screen name="DataExportImport" component={DataExportImportScreen} options={{ tabBarButton: () => null, tabBarVisible: false }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarButton: () => null, tabBarVisible: false }} />
     </Tab.Navigator>
   );
 }
