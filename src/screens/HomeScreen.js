@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Alert, Platform, StatusBar, Image, TextInput } from 'react-native';
 import { getTransactions, deleteTransaction } from '../utils/storage';
+import { getCurrencySymbol } from './SettingsScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import AdvancedReportsScreen from './AdvancedReportsScreen';
+import SettingsScreen from './SettingsScreen';
+import BudgetScreen from './BudgetScreen';
 
-export default function HomeScreen({ navigation, onLogout }) {
+const Tab = createBottomTabNavigator();
+
+function HomeScreenContent({ navigation }) {
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState('');
+  const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -13,6 +21,14 @@ export default function HomeScreen({ navigation, onLogout }) {
     loadTransactions();
     return unsubscribe;
   }, [navigation]);
+
+  useEffect(() => {
+    (async () => {
+      const txs = await getTransactions();
+      setTransactions(txs);
+      if (txs.length > 0 && txs[0].currency) setCurrency(txs[0].currency);
+    })();
+  }, []);
 
   const loadTransactions = async () => {
     const data = await getTransactions();
@@ -40,11 +56,22 @@ export default function HomeScreen({ navigation, onLogout }) {
     );
   });
 
+  const renderTransactionAmount = (item) => {
+    const isIncome = item.amount > 0;
+    return (
+      <Text style={[styles.transactionAmount, isIncome ? styles.income : styles.expense]}>
+        {isIncome
+          ? `+${getCurrencySymbol(item.currency || currency)}${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+          : `-${getCurrencySymbol(item.currency || currency)}${Math.abs(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
+      </Text>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.balanceLabel}>Total Balance</Text>
-        <Text style={styles.balanceAmount}>${totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+        <Text style={styles.balanceAmount}>{getCurrencySymbol(currency)}{totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
 
         <Text style={styles.sectionTitle}>Recent Transactions</Text>
         <TextInput
@@ -60,11 +87,10 @@ export default function HomeScreen({ navigation, onLogout }) {
           renderItem={({ item }) => (
             <View style={styles.transactionRow}>
               <Text style={styles.transactionDesc}>{item.description}</Text>
-              <Text style={styles.transactionAmount}>
-                {item.amount < 0
-                  ? `-$${Math.abs(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                  : `+$${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
-              </Text>
+              {item.isRecurring && (
+                <Text style={styles.recurringIcon}>🔁</Text>
+              )}
+              {renderTransactionAmount(item)}
               <Text style={styles.transactionDate} numberOfLines={1} ellipsizeMode="tail">{item.date}</Text>
               {item.attachment && item.attachment.type === 'image' && (
                 <Image source={{ uri: item.attachment.uri }} style={styles.attachmentThumb} />
@@ -88,20 +114,27 @@ export default function HomeScreen({ navigation, onLogout }) {
         <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddTransaction')}>
           <Text style={styles.addButtonText}>+ Add Transaction</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Categories')}>
-          <Text style={styles.secondaryButtonText}>View Categories</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.reportButton} onPress={() => navigation.navigate('Report')}>
-          <Text style={styles.reportButtonText}>View Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.budgetButton} onPress={() => navigation.navigate('Budget')}>
-          <Text style={styles.budgetButtonText}>View Budgets</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
+  );
+}
+
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#2563eb',
+        tabBarInactiveTintColor: '#64748b',
+        tabBarStyle: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e5e7eb', height: 60 },
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold' },
+      }}
+    >
+      <Tab.Screen name="HomeTab" component={HomeScreenContent} options={{ tabBarLabel: 'Home', tabBarIcon: () => <Text>🏠</Text> }} />
+      <Tab.Screen name="ReportsTab" component={AdvancedReportsScreen} options={{ tabBarLabel: 'Reports', tabBarIcon: () => <Text>📊</Text> }} />
+      <Tab.Screen name="BudgetsTab" component={BudgetScreen} options={{ tabBarLabel: 'Budgets', tabBarIcon: () => <Text>💰</Text> }} />
+      <Tab.Screen name="SettingsTab" component={SettingsScreen} options={{ tabBarLabel: 'Settings', tabBarIcon: () => <Text>⚙️</Text> }} />
+    </Tab.Navigator>
   );
 }
 
@@ -153,20 +186,15 @@ const styles = StyleSheet.create({
     color: '#334155',
     flex: 1,
   },
-  transactionAmount: {
+  recurringIcon: {
     fontSize: 16,
-    color: '#ef4444',
-    width: 90,
-    textAlign: 'right',
+    marginLeft: 4,
+    color: '#38bdf8',
   },
-  transactionDate: {
-    fontSize: 14,
-    color: '#64748b',
-    width: 90,
-    textAlign: 'right',
-    flexShrink: 0,
-    marginLeft: 8,
-  },
+  transactionAmount: { fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
+  income: { color: '#22c55e' }, // green
+  expense: { color: '#ef4444' }, // red
+  transactionDate: { fontSize: 12, color: '#64748b', marginLeft: 8, paddingRight: 8 },
   attachmentThumb: {
     width: 28,
     height: 28,
@@ -205,64 +233,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
-  secondaryButton: {
-    marginTop: 12,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#2b6cb0',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    width: '100%',
-  },
-  secondaryButtonText: {
-    color: '#2b6cb0',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  reportButton: {
-    marginTop: 12,
-    backgroundColor: '#38bdf8',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    width: '100%',
-  },
-  reportButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  budgetButton: {
-    marginTop: 12,
-    backgroundColor: '#fbbf24',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    width: '100%',
-  },
-  budgetButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  logoutButton: {
-    marginTop: 20,
-    backgroundColor: '#ef4444',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    width: '100%',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
   searchBar: {
     width: '100%',
     backgroundColor: '#f1f5f9',
@@ -273,3 +243,6 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
 });
+
+export { HomeScreenContent };
+export default MainTabs;

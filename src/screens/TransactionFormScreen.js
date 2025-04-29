@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Platform, StatusBar, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { storeTransaction } from '../utils/storage';
+import { Picker } from '@react-native-picker/picker';
+import { getDefaultCurrency, getCurrencySymbol } from './SettingsScreen';
 
 const CATEGORIES = [
   'Groceries',
@@ -20,6 +22,15 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [attachment, setAttachment] = useState(null); // { uri, type: 'image' } or { note, type: 'note' }
   const [note, setNote] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState('monthly');
+  const [currency, setCurrency] = useState('USD');
+
+  useEffect(() => {
+    (async () => {
+      setCurrency(await getDefaultCurrency());
+    })();
+  }, []);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -44,6 +55,10 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
       category,
       date: new Date().toLocaleDateString(),
       attachment: attachment ? attachment : note ? { note, type: 'note' } : null,
+      isRecurring,
+      frequency: isRecurring ? frequency : undefined,
+      nextOccurrence: isRecurring ? getNextOccurrenceDate(frequency) : undefined,
+      currency,
     };
     await storeTransaction(transaction);
     Alert.alert('Success', 'Transaction added!');
@@ -52,8 +67,22 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
     setCategory(CATEGORIES[0]);
     setNote('');
     setAttachment(null);
+    setIsRecurring(false);
+    setFrequency('monthly');
     if (navigation?.goBack) navigation.goBack();
   };
+
+  // Helper to get next occurrence timestamp
+  function getNextOccurrenceDate(freq) {
+    const now = new Date();
+    switch (freq) {
+      case 'daily': return new Date(now.setDate(now.getDate() + 1)).getTime();
+      case 'weekly': return new Date(now.setDate(now.getDate() + 7)).getTime();
+      case 'monthly': return new Date(now.setMonth(now.getMonth() + 1)).getTime();
+      case 'yearly': return new Date(now.setFullYear(now.getFullYear() + 1)).getTime();
+      default: return null;
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -98,6 +127,45 @@ export default function TransactionFormScreen({ navigation, onLogout }) {
           onChangeText={setNote}
           multiline
         />
+        <View style={styles.recurringRow}>
+          <Text style={styles.label}>Recurring?</Text>
+          <TouchableOpacity
+            style={[styles.toggleBtn, isRecurring ? styles.toggleOn : styles.toggleOff]}
+            onPress={() => setIsRecurring(!isRecurring)}
+          >
+            <Text style={styles.toggleBtnText}>{isRecurring ? 'Yes' : 'No'}</Text>
+          </TouchableOpacity>
+        </View>
+        {isRecurring && (
+          <View style={styles.pickerRow}>
+            <Text style={styles.label}>Frequency</Text>
+            <Picker
+              selectedValue={frequency}
+              onValueChange={setFrequency}
+              style={styles.picker}
+            >
+              <Picker.Item label="Daily" value="daily" />
+              <Picker.Item label="Weekly" value="weekly" />
+              <Picker.Item label="Monthly" value="monthly" />
+              <Picker.Item label="Yearly" value="yearly" />
+            </Picker>
+          </View>
+        )}
+        <View style={styles.pickerRow}>
+          <Text style={styles.label}>Currency</Text>
+          <Picker
+            selectedValue={currency}
+            onValueChange={setCurrency}
+            style={styles.picker}
+          >
+            <Picker.Item label="$ USD" value="USD" />
+            <Picker.Item label="€ EUR" value="EUR" />
+            <Picker.Item label="£ GBP" value="GBP" />
+            <Picker.Item label="¥ JPY" value="JPY" />
+            <Picker.Item label="₹ INR" value="INR" />
+            <Picker.Item label="R$ BRL" value="BRL" />
+          </Picker>
+        </View>
         <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
           <Text style={styles.addButtonText}>Add</Text>
         </TouchableOpacity>
@@ -231,5 +299,38 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 10,
     alignSelf: 'center',
+  },
+  recurringRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  toggleBtn: {
+    marginLeft: 12,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 18,
+    backgroundColor: '#e5e7eb',
+  },
+  toggleOn: {
+    backgroundColor: '#38bdf8',
+  },
+  toggleOff: {
+    backgroundColor: '#e5e7eb',
+  },
+  toggleBtnText: {
+    color: '#334155',
+    fontWeight: 'bold',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  picker: {
+    flex: 1,
+    marginLeft: 12,
+    backgroundColor: '#fff',
   },
 });

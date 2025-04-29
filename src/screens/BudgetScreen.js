@@ -3,18 +3,17 @@ import { View, Text, StyleSheet, SafeAreaView, TextInput, TouchableOpacity, Flat
 import { getBudgets, setBudget, removeBudget } from '../utils/budget';
 import { getTransactions } from '../utils/storage';
 
-const CATEGORIES = [
-  'Groceries',
-  'Rent',
-  'Utilities',
-  'Dining',
-  'Transport',
-  'Health',
-  'Entertainment',
-  'Other',
-];
-
-export default function BudgetScreen({ onLogout }) {
+function BudgetScreen({ onLogout, CATEGORIES: injectedCategories }) {
+  const CATEGORIES = injectedCategories || [
+    'Groceries',
+    'Rent',
+    'Utilities',
+    'Dining',
+    'Transport',
+    'Health',
+    'Entertainment',
+    'Other',
+  ];
   const [budgets, setBudgets] = useState({});
   const [spending, setSpending] = useState({});
   const [inputs, setInputs] = useState({});
@@ -241,3 +240,5 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 });
+
+export default BudgetScreen;

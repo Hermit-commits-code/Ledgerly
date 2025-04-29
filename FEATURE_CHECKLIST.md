@@ -18,22 +18,29 @@ This checklist tracks the development milestones and features for the Ledgerly f
 - [x] Biometric/passcode lock
 - [x] Dark/light mode
 - [x] Attachments (receipts, notes)
-- [ ] Budget progress alerts
-- [ ] Transaction search/filter
+- [x] Budget progress alerts
+- [x] Transaction search/filter
 
 ## Milestone 3: Advanced Features
-- [ ] Recurring transactions
-- [ ] Savings goals
-- [ ] Advanced reports (income vs. expense, net worth)
-- [ ] Data export/import (CSV/JSON)
-- [ ] Multi-currency support
+- [x] Recurring transactions
+- [x] Savings goals
+- [x] Advanced reports (income vs. expense, net worth)
+- [x] Data export/import (CSV/JSON)
+- [x] Multi-currency support
 
 ## Milestone 4: Cloud & Sync (Optional, Advanced)
-- [ ] Cloud backup/restore (Google Drive, iCloud)
+- [x] Cloud backup/restore (Google Drive, iCloud)
 - [ ] Bank sync (Plaid or CSV import)
 - [ ] Multi-device sync
 
-## Milestone 5: Polish & Deploy
+## Milestone 5: UI Testing & QA
+- [x] Manual UI walkthrough (all screens)
+- [ ] Automated UI tests (Jest/RTL, Detox)
+- [ ] Accessibility checks
+- [ ] Visual regression testing (optional)
+- [ ] User feedback round
+
+## Milestone 6: Polish & Deploy
 - [ ] Full QA/testing
 - [ ] Accessibility improvements
 - [ ] App Store/Play Store deployment
